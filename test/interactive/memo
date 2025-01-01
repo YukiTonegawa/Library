@@ -1,0 +1,1 @@
+rm fifo && mkfifo fifo && (./sol.out < fifo) 1>&2  | ./in.out > fifo 1>&2

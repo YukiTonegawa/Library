@@ -1,0 +1,169 @@
+// 凸包に含まれるか判定
+
+// 同じ点が複数あると壊れる
+// T2は(yの最大値) * (xの最大値)^2くらいになる
+template<typename T, typename T2>
+struct dynamic_upperhull{
+  struct point{
+    T x, y;
+    bool operator == (const point &p) const { return x == p.x && y == p.y; }
+    bool operator != (const point &p) const { return x != p.x || y != p.y; }
+    bool operator < (const point &p) const { return x < p.x || (x == p.x && y < p.y); }
+    bool operator <= (const point &p) const { return x < p.x || (x == p.x && y <= p.y); }
+    // 0だと一列
+    // 0未満だと反時計回り
+    // 0より大きいと時計回り
+    static T2 cross(const point &a, const point &b, const point &c){
+      return (T2)(b.y - a.y) * (c.x - a.x) - (T2)(c.y - a.y) * (b.x - a.x);
+    }
+  };
+  struct node{
+    T lx;
+    node *lch, *rch, *p;
+    point lbr, rbr;
+    // 葉
+    node(T x, T y): lx(x), lch(nullptr), rch(nullptr), p(nullptr), lbr{x, y}, rbr{x, y}{}
+    // 葉以外(pullで初期化)
+    node(): lch(nullptr), rch(nullptr), p(nullptr){}
+    bool is_leaf(){ return !lch && !rch; }
+  };
+  T dx, dy;
+  node *root;
+  // vの左/右部分木への橋頂点を再計算
+  void pull(node *v){
+    v->lx = v->lch->lx;
+    node *l = v->lch, *r = v->rch;
+    T mx = r->lx;
+    while(!l->is_leaf() || !r->is_leaf()){
+      point a = l->lbr, b = l->rbr;
+      point c = r->lbr, d = r->rbr;
+      T2 s1 = point::cross(a, b, c);
+      if(a != b && s1 < 0){
+        l = l->lch;
+      }else if(c != d && point::cross(b, c, d) < 0){
+        r = r->rch;
+      }else if(a == b){
+        r = r->lch;
+      }else if(c == d){
+        l = l->rch;
+      }else{
+        T2 s2 = point::cross(b, a, d);
+        assert(s1 + s2 <= 0);
+        if(s1 + s2 == 0 || s1 * (d.x - mx) > s2 * (mx - c.x)){
+          l = l->rch;
+        }else{
+          r = r->lch;
+        }
+      }
+    }
+    v->lbr = l->lbr;
+    v->rbr = r->lbr;
+  }
+  node *build(int l, int r, const std::vector<std::pair<T, T>> &val){
+    if(r - l == 1) return new node(val[l].first, val[l].second);
+    int m = (l + r) / 2;
+    node *v = new node();
+    if(l < m) v->lch = build(l, m, val), v->lch->p = v;
+    if(m < r) v->rch = build(m, r, val), v->rch->p = v;
+    pull(v);
+    return v;
+  }
+  void enumerate(node *v, std::vector<node*> &res){
+    if(v->is_leaf()){
+      res.push_back(v);
+    }else{
+      enumerate(v->lch, res);
+      enumerate(v->rch, res);
+    }
+  }
+  void get_hull(node *v, point L, point R, std::vector<node*> &res){
+    if(v->is_leaf()){
+      res.push_back(v);
+      return;
+    }
+    if(R <= v->lbr){
+      get_hull(v->lch, L, R, res);
+    }else if(v->rbr <= L){
+      get_hull(v->rch, L, R, res);
+    }else{
+      get_hull(v->lch, L, v->lbr, res);
+      get_hull(v->rch, v->rbr, R, res);
+    }
+  }
+public:
+  // x座標の昇順にソート済 {x, y}
+  dynamic_upperhull(): dx(0), dy(0), root(nullptr){}
+  dynamic_upperhull(const std::vector<std::pair<T, T>>& val): dx(0), dy(0), root(nullptr){ if(val.size()) root = build(0, val.size(), val); }
+
+  void shift_all_x(T x){ dx += x; }
+
+  void shift_all_y(T y){ dy += y; }
+
+  // 分数として見た時の最大値を探す, 空の場合nullptr
+  node *find_max_frac(){
+    if(!root) return nullptr;
+    node *v = root;
+    while(!v->is_leaf()){
+      T lx = v->lbr.x + dx, ly = v->lbr.y + dy;
+      T rx = v->rbr.x + dx, ry = v->rbr.y + dy;
+      if((T2)ly * rx <= (T2)lx * ry) v = v->rch;
+      else v = v->lch;
+    }
+    return v;
+  }
+  // v(葉)を消す
+  // 葉以外の頂点が2つの子を持つ構造を維持する
+  void erase(node *v){
+    assert(v && v->is_leaf());
+    node *p = v->p;
+    if(!p){
+      root = nullptr;
+      return;
+    }
+    node *pp = p->p;
+    node *c = (p->lch == v ? p->rch : p->lch);
+    c->p = pp;
+    if(pp){
+      if(pp->lch == p){
+        pp->lch = c;
+      }else{
+        pp->rch = c;
+      }
+    }else{
+      root = c;
+      return;
+    }
+    while(pp){
+      pp->lx = pp->lch->lx;
+      if(pp->lbr == v->lbr || pp->rbr == v->lbr) pull(pp);
+      pp = pp->p;
+    }
+  }
+  // v(葉)のy座標をyに変更
+  void change_y(node *v, T y){
+    node *p = v->p;
+    point prev = v->lbr;
+    v->lbr.y = v->rbr.y = y - dy;
+    while(p){
+      if(prev.y + dy >= y || p->lbr == prev || p->rbr == prev) pull(p);
+      p = p->p;
+    }
+  }
+  std::pair<T, T> get_val(node *v){ return {v->lbr.x + dx, v->lbr.y + dy}; }
+  // 葉を全て返す
+  std::vector<node*> enumerate(){
+    if(!root) return {};
+    std::vector<node*> res;
+    enumerate(root, res);
+    return res;
+  }
+  // 上側凸包の頂点を全て列挙
+  std::vector<node*> get_hull(){
+    static constexpr T minf = std::numeric_limits<T>::min();
+    static constexpr T inf = std::numeric_limits<T>::max();
+    if(!root) return {};
+    std::vector<node*> res;
+    get_hull(root, {minf, minf}, {inf, inf}, res);
+    return res;
+  }
+};
