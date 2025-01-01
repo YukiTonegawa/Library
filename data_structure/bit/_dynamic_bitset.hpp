@@ -4,6 +4,7 @@
 //#include "bit_operation.hpp"
 #include <iostream>
 #include <string>
+#include <cassert>
 
 // 同じサイズのbitset同士でしか演算できない
 // サイズを変更する場合resize

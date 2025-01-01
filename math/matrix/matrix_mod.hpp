@@ -2,6 +2,7 @@
 #define _MATRIX_MOD_H_
 
 #include <vector>
+#include <cassert>
 #include <iostream>
 
 template<typename mint>
