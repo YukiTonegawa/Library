@@ -106,6 +106,19 @@ struct matrix_mod {
     matrix_mod operator *= (const mint vr) { mul_val_inplace(*this, vr); return *this; }
     vec& operator [] (const int i){ return val[i]; }
 
+
+    int get_row() const {
+        return n;
+    }
+
+    int get_col() const {
+        return m;
+    }
+
+    std::pair<int, int> size() const {
+        return {n, m};
+    }
+
     // n次の単位行列
     static matrix_mod eye(int n) {
         matrix_mod ret(n, n, 0);
