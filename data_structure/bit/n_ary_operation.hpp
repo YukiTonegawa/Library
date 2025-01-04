@@ -3,6 +3,7 @@
 #include <numeric>
 #include <cassert>
 #include <array>
+#include <algorithm>
 #include "select.hpp"
 
 template<typename Int, int base>
