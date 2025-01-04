@@ -45,6 +45,28 @@ struct segtree_dual {
         for (int i = log; i >= 1; i--) push(p >> i);
         d[p - size] = mapping(f, d[p - size], 1);
     }
+
+    // 遅延の順序が入れ替わっても壊れないことが必要
+    void apply_nopush(int l, int r, F f) {
+        assert(0 <= l && l <= r && r <= _n);
+        if (l == r) return;
+
+        l += size;
+        r += size;
+
+        {
+            int l2 = l, r2 = r;
+            while (l < r) {
+                if (l & 1) all_apply(l++, f);
+                if (r & 1) all_apply(--r, f);
+                l >>= 1;
+                r >>= 1;
+            }
+            l = l2;
+            r = r2;
+        }
+    }
+
     void apply(int l, int r, F f) {
         assert(0 <= l && l <= r && r <= _n);
         if (l == r) return;
