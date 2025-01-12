@@ -1,6 +1,5 @@
 #ifndef _SPARSE_TABLE_EFFICIENT_H_
 #define _SPARSE_TABLE_EFFICIENT_H_
-
 #include "sparse_table.hpp"
 
 // 隣接B要素ごとに分ける

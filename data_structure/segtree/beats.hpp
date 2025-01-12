@@ -55,7 +55,7 @@ struct beats {
         assert(0 <= p && p < _n);
         p += size;
         for (int i = log; i >= 1; i--) push(p >> i);
-        return d[p];
+        return d[p].min;
     }
 
     T prod_min(int l, int r) {
@@ -123,6 +123,33 @@ struct beats {
             if (rlen) propagate_prod_sum(smr, rlen, lz[(r2 - 1) >> i]);
         }
         return sml.sum + smr.sum;
+    }
+
+    // all info
+    S _prod(int l, int r) {
+        assert(0 <= l && l <= r && r <= _n);
+        if (l == r) return S();
+
+        l += size;
+        r += size;
+
+        for (int i = log; i >= 1; i--) {
+            if (((l >> i) << i) != l) push(l >> i);
+            if (((r >> i) << i) != r) push((r - 1) >> i);
+        }
+
+        S res, tmp;
+        for (; l < r; l >>= 1, r >>= 1) {
+            if (l & 1) {
+                tmp = res;
+                update_inplace(res, tmp, d[l++]);
+            }
+            if (r & 1) {
+                tmp = res;
+                update_inplace(res, tmp, d[--r]);
+            }
+        }
+        return res;
     }
 
     void apply(int p, F f) {

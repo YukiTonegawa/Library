@@ -1,6 +1,6 @@
 #ifndef _COMBINATION_H_
 #define _COMBINATION_H_
-
+#include <cassert>
 #include <vector>
 template<typename mint>
 struct combination_mod {
