@@ -1,7 +1,7 @@
 #ifndef _WAVELET_MATRIX2D_H_
 #define _WAVELET_MATRIX2D_H_
 #include "../../math/base/bit_ceil.hpp"
-#include "../../util/compressor.hpp"
+#include "../../base/compressor.hpp"
 #include "../bit/simple_bitvector.hpp"
 #include "k_ary_wavelet_matrix.hpp"
 

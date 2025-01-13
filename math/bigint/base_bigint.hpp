@@ -10,12 +10,17 @@
 struct base_bigint {
     using i64 = long long;
     using i128 = __int128_t;
+    static constexpr std::array<i64, 19> pow10 = {1, 10, 100, 1'000, 10'000, 100'000, 1'000'000, 10'000'000, 100'000'000, 1'000'000'000, 10'000'000'000, 100'000'000'000, 
+        1'000'000'000'000, 10'000'000'000'000, 100'000'000'000'000, 1'000'000'000'000'000, 10'000'000'000'000'000, 100'000'000'000'000'000, 1'000'000'000'000'000'000};
+    /*
+    C++17だと怒られるので展開
     static constexpr std::array<i64, 19> pow10 = [](){
         std::array<i64, 19> res;
         res[0] = 1;
         for (int i = 1; i < 19; i++) res[i] = res[i - 1] * 10;
         return res;
     }();
+    */
     static constexpr int base_log = 18;
     static constexpr i64 base = pow10[base_log];
     static constexpr i128 base_sq = (i128)base * base;
