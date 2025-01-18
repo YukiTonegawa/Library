@@ -102,8 +102,16 @@ struct modint32_static {
 };
 
 template<int m>
-std::ostream &operator<<(std::ostream &dest, const modint32_static<m> &a) {
+std::ostream &operator << (std::ostream &dest, const modint32_static<m> &a) {
     dest << a.val();
+    return dest;
+}
+
+template<int m>
+std::istream &operator >> (std::istream &dest, modint32_static<m> &a) {
+    long long x;
+    std::cin >> x;
+    a = x;
     return dest;
 }
 

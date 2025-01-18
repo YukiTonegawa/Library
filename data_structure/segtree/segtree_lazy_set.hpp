@@ -7,15 +7,15 @@
 // 区間set可能
 template <class S, S (*op)(S, S), S (*e)(), class F, S (*mapping)(F, S, int), F (*composition)(F, F), F (*id)()>
 struct segtree_lazy_set {
-    static constexpr int Dmax = 20; // N < 2^Dmax
-    using ptr = std::array<S, Dmax>*;
+    static constexpr int log_max = 20; // N < 2^log_max
+    using ptr = std::array<S, log_max>*;
   public:
     segtree_lazy_set() : segtree_lazy_set(0) {}
-    explicit segtree_lazy_set(int n) : segtree_lazy_set(std::vector<S>(n, e())) {}
-    explicit segtree_lazy_set(const std::vector<S>& v) : _n(int(v.size())) {
-        assert(_n < (1 << Dmax));
-        size = bit_ceil((unsigned int)(_n));
-        log = bit_ceil_log((unsigned int)size);
+    segtree_lazy_set(int n) : segtree_lazy_set(std::vector<S>(n, e())) {}
+    segtree_lazy_set(const std::vector<S>& v) : _n(int(v.size())) {
+        assert(_n < (1 << log_max));
+        log = bit_ceil_log((unsigned int)_n);
+        size = 1 << log;
         d = std::vector<S>(2 * size, e());
         lz = std::vector<F>(size, id());
         rs = std::vector<ptr>(size, nullptr);
@@ -43,7 +43,7 @@ struct segtree_lazy_set {
     void set(int l, int r, S x) {
         assert(0 <= l && l <= r && r <= _n);
         if (l == r) return;
-        ptr p(new std::array<S, Dmax>());
+        ptr p(new std::array<S, log_max>());
         {  
             (*p)[0] = x;
             for (int i = 1; i <= 31 - __builtin_clz(r - l); i++){

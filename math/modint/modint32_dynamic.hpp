@@ -1,6 +1,6 @@
 #ifndef _MODINT32_DYNAMIC_H_
 #define _MODINT32_DYNAMIC_H_
-
+#include <iostream>
 #include <cassert>
 #include "../base/fast_mul_mod/barrett.hpp"
 #include "../base/gcd.hpp"
@@ -99,8 +99,16 @@ template <int id>
 barrett modint32_dynamic<id>::bt(998244353);
 
 template<int id>
-std::ostream &operator<<(std::ostream &dest, const modint32_dynamic<id> &a) {
+std::ostream &operator << (std::ostream &dest, const modint32_dynamic<id> &a) {
     dest << a.val();
+    return dest;
+}
+
+template<int id>
+std::istream &operator >> (std::istream &dest, modint32_dynamic<id> &a) {
+    long long x;
+    std::cin >> x;
+    a = x;
     return dest;
 }
 

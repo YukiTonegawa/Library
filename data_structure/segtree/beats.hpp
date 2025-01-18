@@ -3,6 +3,7 @@
 #include "../../math/base/bit_ceil.hpp"
 #include <cassert>
 #include <algorithm>
+#include <vector>
 
 template <typename T, typename Tsum>
 struct beats {
@@ -132,7 +133,7 @@ struct beats {
         propagate(d[k], 1 << (log - 31 + __builtin_clz(k)), lz[k], f);
     }
 
-    void all_apply_min(int k, T f) {
+    void all_apply_chmin(int k, T f) {
         int pos = 0;
         que[pos] = k;
         while(pos >= 0) {
@@ -151,7 +152,7 @@ struct beats {
         }
     }
 
-    void all_apply_max(int k, T f) {
+    void all_apply_chmax(int k, T f) {
         int pos = 0;
         que[pos] = k;
         while(pos >= 0) {
@@ -187,8 +188,8 @@ struct beats {
     // n要素の0で初期化
     beats(int n) : beats(std::vector<T>(n, T(0))) {}
     beats(const std::vector<T>& v) : _n(int(v.size())) {
-        size = (int)bit_ceil((unsigned int)(_n));
-        log = bit_ceil_log((unsigned int)size);
+        log = bit_ceil_log((unsigned int)_n);
+        size = 1 << log;
         d = std::vector<S>(2 * size, S());
         lz = std::vector<F>(2 * size, F());
         que = std::vector<int>(2 * size);
@@ -272,8 +273,7 @@ struct beats {
         return sml.sum + smr.sum;
     }
 
-    // all info
-    S _prod(int l, int r) {
+    S prod_all_info(int l, int r) {
         assert(0 <= l && l <= r && r <= _n);
         if (l == r) return S();
         l += size;
@@ -304,58 +304,6 @@ struct beats {
         for (int i = 1; i <= log; i++) update(p >> i);
     }
 
-    void apply_min(int l, int r, T f) {
-        assert(0 <= l && l <= r && r <= _n);
-        if (l == r) return;
-        l += size;
-        r += size;
-        for (int i = log; i >= 1; i--) {
-            if (((l >> i) << i) != l) push(l >> i);
-            if (((r >> i) << i) != r) push((r - 1) >> i);
-        }
-        {
-            int l2 = l, r2 = r;
-            while (l < r) {
-                if (l & 1) all_apply_min(l++, f);
-                if (r & 1) all_apply_min(--r, f);
-                l >>= 1;
-                r >>= 1;
-            }
-            l = l2;
-            r = r2;
-        }
-        for (int i = 1; i <= log; i++) {
-            if (((l >> i) << i) != l) update(l >> i);
-            if (((r >> i) << i) != r) update((r - 1) >> i);
-        }
-    }
-
-    void apply_max(int l, int r, T f) {
-        assert(0 <= l && l <= r && r <= _n);
-        if (l == r) return;
-        l += size;
-        r += size;
-        for (int i = log; i >= 1; i--) {
-            if (((l >> i) << i) != l) push(l >> i);
-            if (((r >> i) << i) != r) push((r - 1) >> i);
-        }
-        {
-            int l2 = l, r2 = r;
-            while (l < r) {
-                if (l & 1) all_apply_max(l++, f);
-                if (r & 1) all_apply_max(--r, f);
-                l >>= 1;
-                r >>= 1;
-            }
-            l = l2;
-            r = r2;
-        }
-        for (int i = 1; i <= log; i++) {
-            if (((l >> i) << i) != l) update(l >> i);
-            if (((r >> i) << i) != r) update((r - 1) >> i);
-        }
-    }
-
     void apply_add(int l, int r, T f) {
         assert(0 <= l && l <= r && r <= _n);
         if (l == r) return;
@@ -370,6 +318,58 @@ struct beats {
             while (l < r) {
                 if (l & 1) all_apply_add(l++, f);
                 if (r & 1) all_apply_add(--r, f);
+                l >>= 1;
+                r >>= 1;
+            }
+            l = l2;
+            r = r2;
+        }
+        for (int i = 1; i <= log; i++) {
+            if (((l >> i) << i) != l) update(l >> i);
+            if (((r >> i) << i) != r) update((r - 1) >> i);
+        }
+    }
+
+    void apply_chmin(int l, int r, T f) {
+        assert(0 <= l && l <= r && r <= _n);
+        if (l == r) return;
+        l += size;
+        r += size;
+        for (int i = log; i >= 1; i--) {
+            if (((l >> i) << i) != l) push(l >> i);
+            if (((r >> i) << i) != r) push((r - 1) >> i);
+        }
+        {
+            int l2 = l, r2 = r;
+            while (l < r) {
+                if (l & 1) all_apply_chmin(l++, f);
+                if (r & 1) all_apply_chmin(--r, f);
+                l >>= 1;
+                r >>= 1;
+            }
+            l = l2;
+            r = r2;
+        }
+        for (int i = 1; i <= log; i++) {
+            if (((l >> i) << i) != l) update(l >> i);
+            if (((r >> i) << i) != r) update((r - 1) >> i);
+        }
+    }
+
+    void apply_chmax(int l, int r, T f) {
+        assert(0 <= l && l <= r && r <= _n);
+        if (l == r) return;
+        l += size;
+        r += size;
+        for (int i = log; i >= 1; i--) {
+            if (((l >> i) << i) != l) push(l >> i);
+            if (((r >> i) << i) != r) push((r - 1) >> i);
+        }
+        {
+            int l2 = l, r2 = r;
+            while (l < r) {
+                if (l & 1) all_apply_chmax(l++, f);
+                if (r & 1) all_apply_chmax(--r, f);
                 l >>= 1;
                 r >>= 1;
             }

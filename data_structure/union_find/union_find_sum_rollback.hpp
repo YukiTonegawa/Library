@@ -2,6 +2,7 @@
 #define _UNION_FIND_SUM_ROLLBACK_H_
 #include <vector>
 #include <queue>
+#include <cassert>
 
 template<typename S, bool use_enumerate = false>
 struct union_find_sum_rollback {
