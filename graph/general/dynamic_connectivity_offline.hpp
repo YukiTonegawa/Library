@@ -5,7 +5,7 @@
 #include <cassert>
 #include <functional>
 #include <algorithm>
-//#include "../../data_structure/union_find/union_find_sum rollback.hpp"
+#include "../../data_structure/union_find/union_find_sum_rollback.hpp"
 
 // UF := コンストラクタuf(N), 関数unite(a, b), rollback(a, bを持つ
 // F: (uf, query_id) -> void
