@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 template<int log, typename S, S (*op)(S, S), S (*e)(), S (*flip)(S)>
 struct meldable_binary_trie {
@@ -142,6 +143,20 @@ struct meldable_treap {
         }
         return res;
     }
+
+    static S prod(node *a, int l, int r) {
+        auto dfs = [&](auto &&dfs, node *v, int L, int R) -> S {
+            if (!v || R <= l || r <= L) return e();
+            if (l <= L && R <= r) return v->sum;
+            int lsz = size(v->l);
+            int p = L + lsz;
+            if (p < l) return dfs(dfs, v->r, p + 1, R);
+            if (r <= p) return dfs(dfs, v->l, L, p);
+            return op(dfs(dfs, v->l, L, p), op(v->val, dfs(dfs, v->r, p + 1, R)));
+        };
+        return dfs(dfs, a, 0, size(a));
+    }
+
     // [0, r), [r, sz)
     static std::pair<node*, node*> split(node *a, int r) {
         if (r == 0) return {nullptr, a};
@@ -219,20 +234,6 @@ struct segtree_sortable {
             a->sum = op(a->sum, a->r->sum);
         }
         return a;
-    }
-
-    static void rotate_right(node_outer *a) {
-        node_outer *p = a->p;
-        if ((p->l = a->r)) a->r->p = p;
-        a->r = p, p->p = a;
-        update(p), update(a);
-    }
-    
-    static void rotate_left(node_outer *a) {
-        node_outer *p = a->p;
-        if ((p->r = a->l)) a->l->p = p;
-        a->l = p, p->p = a;
-        update(p), update(a);
     }
 
     static node_outer *splay(node_outer *v) {
@@ -367,6 +368,59 @@ struct segtree_sortable {
         auto [x, y, z] = split3(a, l, r);
         S res = y->sum;
         return {merge3(x, y, z), res};
+    }
+
+    static std::pair<node_outer*, S> prod_fast(node_outer *a, int l, int r) {
+        if (r == l) return {a, e()};
+        r -= l;
+        while (true) {
+            int lsz = size(a->l);
+            if (l < lsz) {
+                a = a->l;
+            } else if (lsz + tree_inner::size(a->v) <= l){
+                l -= lsz + tree_inner::size(a->v);
+                a = a->r;
+            } else {
+                l -= lsz;
+                break;
+            }
+        }
+        S res = e();
+        int rem = std::min(r, tree_inner::size(a->v) - l);
+        if (!a->fliped) {
+            res = tree_inner::prod(a->v, l, l + rem);
+        } else {
+            int sz = tree_inner::size(a->v);
+            res = flip(tree_inner::prod(a->v, sz - l - rem, sz - l));
+        }
+        r -= rem;
+        splay(a);
+        if (r == 0) return {a, res};
+        if (size(a->r) == r) return {a, op(res, all_prod(a->r))};
+        a = a->r;
+        while (true) {
+            int lsz = size(a->l);
+            if (r < lsz) {
+                a = a->l;
+            } else if (lsz + tree_inner::size(a->v) <= r){
+                res = op(res, op(all_prod(a->l), a->fliped ? flip(a->v->sum) : a->v->sum));
+                r -= lsz + tree_inner::size(a->v);
+                a = a->r;
+            } else {
+                res = op(res, all_prod(a->l));
+                r -= lsz;
+                break;
+            }
+        }
+        if (!a->fliped) {
+            res = op(res, tree_inner::prod_left(a->v, r));
+        } else {
+            int sz = tree_inner::size(a->v);
+            S tmp = flip(tree_inner::prod_right(a->v, sz - r));
+            res = op(res, tmp);
+        }
+        splay(a);
+        return {a, res};
     }
 
     static node_outer *all_sort(node_outer *a, bool ord) {
