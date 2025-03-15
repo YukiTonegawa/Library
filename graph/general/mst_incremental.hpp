@@ -1,5 +1,7 @@
 #ifndef _MST_INCREMENTAL_H_
 #define _MST_INCREMENTAL_H_
+#include <cassert>
+#include <numeric>
 #include "../tree/lct_min_node.hpp"
 
 template<typename W>
